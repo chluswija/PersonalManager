@@ -176,3 +176,43 @@ export function getStrengthLabel(strength: number): { label: string; color: stri
   if (strength < 80) return { label: 'Good', color: 'accent' };
   return { label: 'Strong', color: 'success' };
 }
+
+// Simple async encrypt/decrypt functions for strings
+export async function encrypt(text: string, key: CryptoKey): Promise<string> {
+  const encoder = new TextEncoder();
+  const data = encoder.encode(text);
+  const iv = generateIV();
+  
+  const ciphertext = await crypto.subtle.encrypt(
+    { name: 'AES-GCM', iv: iv as BufferSource },
+    key,
+    data
+  );
+  
+  // Combine IV and ciphertext
+  const combined = new Uint8Array(iv.length + ciphertext.byteLength);
+  combined.set(iv);
+  combined.set(new Uint8Array(ciphertext), iv.length);
+  
+  return arrayBufferToBase64(combined.buffer as ArrayBuffer);
+}
+
+export async function decrypt(encrypted: string, key: CryptoKey): Promise<string> {
+  try {
+    const combined = base64ToUint8Array(encrypted);
+    const iv = combined.slice(0, IV_LENGTH);
+    const ciphertext = combined.slice(IV_LENGTH);
+    
+    const plaintext = await crypto.subtle.decrypt(
+      { name: 'AES-GCM', iv: iv as BufferSource },
+      key,
+      ciphertext as BufferSource
+    );
+    
+    const decoder = new TextDecoder();
+    return decoder.decode(plaintext);
+  } catch (error) {
+    console.error('Decryption error:', error);
+    return '';
+  }
+}

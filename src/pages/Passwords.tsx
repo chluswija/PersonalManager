@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   KeyRound,
@@ -40,8 +40,10 @@ import { Slider } from '@/components/ui/slider';
 import { Switch } from '@/components/ui/switch';
 import { Badge } from '@/components/ui/badge';
 import { useToast } from '@/hooks/use-toast';
-import { generatePassword, calculatePasswordStrength, getStrengthLabel, type PasswordOptions } from '@/lib/encryption';
+import { generatePassword, calculatePasswordStrength, getStrengthLabel, type PasswordOptions, encrypt, decrypt } from '@/lib/encryption';
 import { cn } from '@/lib/utils';
+import { db } from '@/lib/firebase';
+import { collection, addDoc, getDocs, query, where, deleteDoc, doc, updateDoc, Timestamp } from 'firebase/firestore';
 
 interface PasswordEntry {
   id: string;
@@ -53,15 +55,14 @@ interface PasswordEntry {
   createdAt: Date;
 }
 
-const mockPasswords: PasswordEntry[] = [];
-
 export default function Passwords() {
-  const [passwords] = useState<PasswordEntry[]>(mockPasswords);
+  const [passwords, setPasswords] = useState<PasswordEntry[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [copiedId, setCopiedId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(false);
   
   // Form state
   const [formData, setFormData] = useState({
@@ -84,8 +85,101 @@ export default function Passwords() {
   });
   const [generatedPassword, setGeneratedPassword] = useState('');
   
-  const { encryptionKey } = useAuth();
+  const { encryptionKey, user } = useAuth();
   const { toast } = useToast();
+
+  // Load passwords from Firebase
+  useEffect(() => {
+    if (user && encryptionKey) {
+      loadPasswords();
+    }
+  }, [user, encryptionKey]);
+
+  const loadPasswords = async () => {
+    if (!user || !encryptionKey) return;
+    
+    try {
+      const q = query(collection(db, 'passwords'), where('userId', '==', user.uid));
+      const querySnapshot = await getDocs(q);
+      const loadedPasswords: PasswordEntry[] = [];
+      
+      for (const doc of querySnapshot.docs) {
+        const data = doc.data();
+        try {
+          const username = await decrypt(data.encryptedUsername, encryptionKey);
+          loadedPasswords.push({
+            id: doc.id,
+            title: data.title,
+            username,
+            url: data.url || '',
+            tags: data.tags || [],
+            favorite: data.favorite || false,
+            createdAt: data.createdAt?.toDate() || new Date(),
+          });
+        } catch (error) {
+          console.error('Failed to decrypt password entry:', error);
+        }
+      }
+      
+      setPasswords(loadedPasswords);
+    } catch (error) {
+      console.error('Error loading passwords:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load passwords',
+        variant: 'destructive',
+      });
+    }
+  };
+
+  const handleSavePassword = async () => {
+    if (!user || !encryptionKey || !formData.title || !formData.password) return;
+    
+    setLoading(true);
+    try {
+      const encryptedPassword = await encrypt(formData.password, encryptionKey);
+      const encryptedUsername = await encrypt(formData.username, encryptionKey);
+      const encryptedNotes = formData.notes ? await encrypt(formData.notes, encryptionKey) : '';
+      
+      await addDoc(collection(db, 'passwords'), {
+        userId: user.uid,
+        title: formData.title,
+        encryptedUsername,
+        encryptedPassword,
+        encryptedNotes,
+        url: formData.url,
+        tags: formData.tags.split(',').map(t => t.trim()).filter(Boolean),
+        favorite: false,
+        createdAt: Timestamp.now(),
+      });
+      
+      toast({
+        title: 'Success',
+        description: 'Password saved successfully',
+      });
+      
+      // Reset form and reload
+      setFormData({
+        title: '',
+        username: '',
+        password: '',
+        url: '',
+        notes: '',
+        tags: '',
+      });
+      setIsAddDialogOpen(false);
+      await loadPasswords();
+    } catch (error) {
+      console.error('Error saving password:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to save password',
+        variant: 'destructive',
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const handleGeneratePassword = () => {
     const password = generatePassword(generatorOptions);
@@ -345,9 +439,10 @@ export default function Passwords() {
               </Button>
               <Button
                 className="gradient-primary text-primary-foreground"
-                disabled={!encryptionKey || !formData.title || !formData.password}
+                disabled={!encryptionKey || !formData.title || !formData.password || loading}
+                onClick={handleSavePassword}
               >
-                Save Password
+                {loading ? 'Saving...' : 'Save Password'}
               </Button>
             </div>
             {!encryptionKey && (

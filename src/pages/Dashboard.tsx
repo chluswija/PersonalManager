@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -20,19 +20,14 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } f
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useToast } from '@/hooks/use-toast';
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs, onSnapshot } from 'firebase/firestore';
 
 const quickActions = [
   { icon: KeyRound, label: 'Add Password', path: '/passwords', color: 'primary' },
   { icon: FileText, label: 'New Note', path: '/notes', color: 'accent' },
   { icon: CheckSquare, label: 'Add Task', path: '/todos', color: 'success' },
   { icon: Receipt, label: 'Log Expense', path: '/expenses', color: 'warning' },
-];
-
-const stats = [
-  { label: 'Passwords', value: '0', icon: KeyRound, trend: null },
-  { label: 'Notes', value: '0', icon: FileText, trend: null },
-  { label: 'Tasks', value: '0', icon: CheckSquare, trend: null },
-  { label: 'Documents', value: '0', icon: Wallet, trend: null },
 ];
 
 const containerVariants = {
@@ -54,6 +49,15 @@ export default function Dashboard() {
   const [isUnlockDialogOpen, setIsUnlockDialogOpen] = useState(false);
   const [unlockPassword, setUnlockPassword] = useState('');
   const [unlocking, setUnlocking] = useState(false);
+  
+  // Real-time stats
+  const [stats, setStats] = useState({
+    passwords: 0,
+    notes: 0,
+    todos: 0,
+    expenses: 0,
+  });
+  const [statsLoading, setStatsLoading] = useState(true);
 
   const greeting = () => {
     const hour = new Date().getHours();
@@ -61,6 +65,60 @@ export default function Dashboard() {
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
   };
+
+  // Load and listen to real-time counts
+  useEffect(() => {
+    if (!user) return;
+
+    setStatsLoading(true);
+    const unsubscribers: (() => void)[] = [];
+    let loadedCount = 0;
+    const totalCollections = 4;
+
+    const checkAllLoaded = () => {
+      loadedCount++;
+      if (loadedCount === totalCollections) {
+        setStatsLoading(false);
+      }
+    };
+
+    // Listen to passwords count
+    const passwordsQuery = query(collection(db, 'passwords'), where('userId', '==', user.uid));
+    const unsubPasswords = onSnapshot(passwordsQuery, (snapshot) => {
+      setStats(prev => ({ ...prev, passwords: snapshot.size }));
+      checkAllLoaded();
+    });
+    unsubscribers.push(unsubPasswords);
+
+    // Listen to notes count
+    const notesQuery = query(collection(db, 'notes'), where('userId', '==', user.uid));
+    const unsubNotes = onSnapshot(notesQuery, (snapshot) => {
+      setStats(prev => ({ ...prev, notes: snapshot.size }));
+      checkAllLoaded();
+    });
+    unsubscribers.push(unsubNotes);
+
+    // Listen to todos count
+    const todosQuery = query(collection(db, 'todos'), where('userId', '==', user.uid));
+    const unsubTodos = onSnapshot(todosQuery, (snapshot) => {
+      setStats(prev => ({ ...prev, todos: snapshot.size }));
+      checkAllLoaded();
+    });
+    unsubscribers.push(unsubTodos);
+
+    // Listen to expenses count
+    const expensesQuery = query(collection(db, 'expenses'), where('userId', '==', user.uid));
+    const unsubExpenses = onSnapshot(expensesQuery, (snapshot) => {
+      setStats(prev => ({ ...prev, expenses: snapshot.size }));
+      checkAllLoaded();
+    });
+    unsubscribers.push(unsubExpenses);
+
+    // Cleanup all listeners
+    return () => {
+      unsubscribers.forEach(unsub => unsub());
+    };
+  }, [user]);
 
   const handleUnlock = async () => {
     if (!unlockPassword) {
@@ -204,28 +262,77 @@ export default function Dashboard() {
       <motion.div variants={itemVariants}>
         <h2 className="text-lg font-semibold mb-4">Overview</h2>
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          {stats.map((stat, index) => {
-            const Icon = stat.icon;
-            return (
-              <Card key={stat.label} className="border-border/50">
-                <CardContent className="p-4">
-                  <div className="flex items-center justify-between">
-                    <Icon className="w-5 h-5 text-muted-foreground" />
-                    {stat.trend && (
-                      <span className="text-xs text-success flex items-center gap-1">
-                        <TrendingUp className="w-3 h-3" />
-                        {stat.trend}
-                      </span>
-                    )}
-                  </div>
-                  <div className="mt-3">
-                    <p className="text-2xl font-bold">{stat.value}</p>
-                    <p className="text-sm text-muted-foreground">{stat.label}</p>
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })}
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <KeyRound className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="mt-3">
+                <p className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                  ) : (
+                    stats.passwords
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">Passwords</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <FileText className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="mt-3">
+                <p className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                  ) : (
+                    stats.notes
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">Notes</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <CheckSquare className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="mt-3">
+                <p className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                  ) : (
+                    stats.todos
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">Tasks</p>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="border-border/50">
+            <CardContent className="p-4">
+              <div className="flex items-center justify-between">
+                <Receipt className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div className="mt-3">
+                <p className="text-2xl font-bold">
+                  {statsLoading ? (
+                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                  ) : (
+                    stats.expenses
+                  )}
+                </p>
+                <p className="text-sm text-muted-foreground">Expenses</p>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </motion.div>
 

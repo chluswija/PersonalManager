@@ -210,6 +210,33 @@ export default function Passwords() {
     p.tags.some(t => t.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
+  // Show a message if encryption key is not available
+  if (!encryptionKey && passwords.length === 0) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="space-y-6"
+      >
+        <div>
+          <h1 className="text-2xl font-bold tracking-tight">Passwords</h1>
+          <p className="text-muted-foreground">Securely store and manage your credentials</p>
+        </div>
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center mb-4">
+              <Shield className="w-6 h-6 text-warning" />
+            </div>
+            <h3 className="font-medium text-foreground mb-1">Encryption Not Unlocked</h3>
+            <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
+              Please unlock your vault with your password to view and manage your passwords
+            </p>
+          </CardContent>
+        </Card>
+      </motion.div>
+    );
+  }
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}

@@ -1,3 +1,4 @@
+import { useState } from 'react';
 import { motion } from 'framer-motion';
 import { Link } from 'react-router-dom';
 import {
@@ -10,10 +11,15 @@ import {
   TrendingUp,
   Shield,
   ArrowRight,
+  Lock,
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import { useToast } from '@/hooks/use-toast';
 
 const quickActions = [
   { icon: KeyRound, label: 'Add Password', path: '/passwords', color: 'primary' },
@@ -43,13 +49,48 @@ const itemVariants = {
 };
 
 export default function Dashboard() {
-  const { user, encryptionKey } = useAuth();
+  const { user, encryptionKey, initializeEncryption } = useAuth();
+  const { toast } = useToast();
+  const [isUnlockDialogOpen, setIsUnlockDialogOpen] = useState(false);
+  const [unlockPassword, setUnlockPassword] = useState('');
+  const [unlocking, setUnlocking] = useState(false);
 
   const greeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 18) return 'Good afternoon';
     return 'Good evening';
+  };
+
+  const handleUnlock = async () => {
+    if (!unlockPassword) {
+      toast({
+        title: 'Error',
+        description: 'Please enter your password',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setUnlocking(true);
+    try {
+      await initializeEncryption(unlockPassword);
+      toast({
+        title: 'Success',
+        description: 'Encryption unlocked successfully',
+      });
+      setIsUnlockDialogOpen(false);
+      setUnlockPassword('');
+    } catch (error) {
+      console.error('Unlock error:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to unlock. Please check your password.',
+        variant: 'destructive',
+      });
+    } finally {
+      setUnlocking(false);
+    }
   };
 
   return (
@@ -83,13 +124,52 @@ export default function Dashboard() {
                   Enter your password to unlock encrypted data
                 </p>
               </div>
-              <Button variant="outline" size="sm">
+              <Button variant="outline" size="sm" onClick={() => setIsUnlockDialogOpen(true)}>
+                <Lock className="w-4 h-4 mr-2" />
                 Unlock
               </Button>
             </CardContent>
           </Card>
         </motion.div>
       )}
+
+      {/* Unlock Dialog */}
+      <Dialog open={isUnlockDialogOpen} onOpenChange={setIsUnlockDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Unlock Encrypted Data</DialogTitle>
+            <DialogDescription>
+              Enter your account password to unlock your encrypted passwords and notes
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="unlock-password">Password</Label>
+              <Input
+                id="unlock-password"
+                type="password"
+                placeholder="Enter your password"
+                value={unlockPassword}
+                onChange={(e) => setUnlockPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' && !unlocking) {
+                    handleUnlock();
+                  }
+                }}
+                autoFocus
+              />
+            </div>
+          </div>
+          <div className="flex justify-end gap-2">
+            <Button variant="outline" onClick={() => setIsUnlockDialogOpen(false)} disabled={unlocking}>
+              Cancel
+            </Button>
+            <Button onClick={handleUnlock} disabled={unlocking || !unlockPassword}>
+              {unlocking ? 'Unlocking...' : 'Unlock'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
       {/* Quick Actions */}
       <motion.div variants={itemVariants}>

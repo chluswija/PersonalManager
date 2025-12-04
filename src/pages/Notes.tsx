@@ -166,6 +166,12 @@ export default function Notes() {
     }
   };
 
+  // Filter notes based on search
+  const filteredNotes = notes.filter(note => 
+    note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+    note.content.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   return (
     <motion.div
       initial={{ opacity: 0, y: 20 }}
@@ -260,7 +266,7 @@ export default function Notes() {
       </div>
 
       {/* Notes List */}
-      {notes.length === 0 ? (
+      {filteredNotes.length === 0 && notes.length === 0 ? (
         <Card className="border-dashed">
           <CardContent className="flex flex-col items-center justify-center py-12">
             <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -276,12 +282,21 @@ export default function Notes() {
             </Button>
           </CardContent>
         </Card>
+      ) : filteredNotes.length === 0 ? (
+        <Card className="border-dashed">
+          <CardContent className="flex flex-col items-center justify-center py-12">
+            <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center mb-4">
+              <Search className="w-6 h-6 text-muted-foreground" />
+            </div>
+            <h3 className="font-medium text-foreground mb-1">No notes found</h3>
+            <p className="text-sm text-muted-foreground text-center mb-4">
+              Try a different search term
+            </p>
+          </CardContent>
+        </Card>
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {notes.filter(note => 
-            note.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            note.content.toLowerCase().includes(searchQuery.toLowerCase())
-          ).map((note) => (
+          {filteredNotes.map((note) => (
             <Card key={note.id} className="hover:shadow-md transition-shadow">
               <CardContent className="p-4">
                 <div className="flex items-start justify-between mb-2">

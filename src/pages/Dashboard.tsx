@@ -156,14 +156,14 @@ export default function Dashboard() {
       variants={containerVariants}
       initial="hidden"
       animate="visible"
-      className="space-y-8"
+      className="space-y-4 sm:space-y-6 md:space-y-8"
     >
       {/* Header */}
       <motion.div variants={itemVariants} className="space-y-1">
-        <h1 className="text-3xl font-bold tracking-tight">
+        <h1 className="text-2xl sm:text-3xl font-bold tracking-tight leading-tight">
           {greeting()}, {user?.displayName?.split(' ')[0] || 'there'}
         </h1>
-        <p className="text-muted-foreground">
+        <p className="text-sm sm:text-base text-muted-foreground">
           Here's an overview of your personal data
         </p>
       </motion.div>
@@ -232,7 +232,7 @@ export default function Dashboard() {
       {/* Quick Actions */}
       <motion.div variants={itemVariants}>
         <h2 className="text-lg font-semibold mb-4">Quick Actions</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           {quickActions.map((action, index) => {
             const Icon = action.icon;
             return (
@@ -243,12 +243,12 @@ export default function Dashboard() {
                   className="group"
                 >
                   <Card className="hover:shadow-md transition-all cursor-pointer border-border/50 hover:border-primary/30">
-                    <CardContent className="p-4 flex items-center gap-3">
-                      <div className={`w-10 h-10 rounded-lg bg-${action.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform`}>
+                    <CardContent className="p-3 md:p-4 flex flex-col md:flex-row items-center gap-2 md:gap-3">
+                      <div className={`w-10 h-10 md:w-10 md:h-10 rounded-lg bg-${action.color}/10 flex items-center justify-center group-hover:scale-110 transition-transform flex-shrink-0`}>
                         <Icon className={`w-5 h-5 text-${action.color}`} />
                       </div>
-                      <span className="font-medium text-sm">{action.label}</span>
-                      <Plus className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity" />
+                      <span className="font-medium text-xs md:text-sm text-center md:text-left leading-tight">{action.label}</span>
+                      <Plus className="w-4 h-4 text-muted-foreground ml-auto opacity-0 group-hover:opacity-100 transition-opacity hidden md:block" />
                     </CardContent>
                   </Card>
                 </motion.div>
@@ -261,75 +261,75 @@ export default function Dashboard() {
       {/* Stats */}
       <motion.div variants={itemVariants}>
         <h2 className="text-lg font-semibold mb-4">Overview</h2>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-4">
           <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <KeyRound className="w-5 h-5 text-muted-foreground" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center justify-between mb-2 md:mb-3">
+                <KeyRound className="w-4 h-4 md:w-5 md:h-5 text-primary" />
               </div>
-              <div className="mt-3">
-                <p className="text-2xl font-bold">
+              <div>
+                <p className="text-xl md:text-2xl font-bold">
                   {statsLoading ? (
-                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                    <span className="inline-block w-10 h-6 md:w-12 md:h-8 bg-muted animate-pulse rounded"></span>
                   ) : (
                     stats.passwords
                   )}
                 </p>
-                <p className="text-sm text-muted-foreground">Passwords</p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Passwords</p>
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <FileText className="w-5 h-5 text-muted-foreground" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center justify-between mb-2 md:mb-3">
+                <FileText className="w-4 h-4 md:w-5 md:h-5 text-accent" />
               </div>
-              <div className="mt-3">
-                <p className="text-2xl font-bold">
+              <div>
+                <p className="text-xl md:text-2xl font-bold">
                   {statsLoading ? (
-                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                    <span className="inline-block w-10 h-6 md:w-12 md:h-8 bg-muted animate-pulse rounded"></span>
                   ) : (
                     stats.notes
                   )}
                 </p>
-                <p className="text-sm text-muted-foreground">Notes</p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Notes</p>
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <CheckSquare className="w-5 h-5 text-muted-foreground" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center justify-between mb-2 md:mb-3">
+                <CheckSquare className="w-4 h-4 md:w-5 md:h-5 text-success" />
               </div>
-              <div className="mt-3">
-                <p className="text-2xl font-bold">
+              <div>
+                <p className="text-xl md:text-2xl font-bold">
                   {statsLoading ? (
-                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                    <span className="inline-block w-10 h-6 md:w-12 md:h-8 bg-muted animate-pulse rounded"></span>
                   ) : (
                     stats.todos
                   )}
                 </p>
-                <p className="text-sm text-muted-foreground">Tasks</p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Tasks</p>
               </div>
             </CardContent>
           </Card>
           
           <Card className="border-border/50">
-            <CardContent className="p-4">
-              <div className="flex items-center justify-between">
-                <Receipt className="w-5 h-5 text-muted-foreground" />
+            <CardContent className="p-3 md:p-4">
+              <div className="flex items-center justify-between mb-2 md:mb-3">
+                <Receipt className="w-4 h-4 md:w-5 md:h-5 text-warning" />
               </div>
-              <div className="mt-3">
-                <p className="text-2xl font-bold">
+              <div>
+                <p className="text-xl md:text-2xl font-bold">
                   {statsLoading ? (
-                    <span className="inline-block w-12 h-8 bg-muted animate-pulse rounded"></span>
+                    <span className="inline-block w-10 h-6 md:w-12 md:h-8 bg-muted animate-pulse rounded"></span>
                   ) : (
                     stats.expenses
                   )}
                 </p>
-                <p className="text-sm text-muted-foreground">Expenses</p>
+                <p className="text-xs md:text-sm text-muted-foreground mt-0.5">Expenses</p>
               </div>
             </CardContent>
           </Card>

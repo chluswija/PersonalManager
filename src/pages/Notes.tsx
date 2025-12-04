@@ -176,17 +176,17 @@ export default function Notes() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Notes</h1>
-          <p className="text-muted-foreground">Capture your thoughts and ideas</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Notes</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-0.5">Capture your thoughts and ideas</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground">
+            <Button className="gradient-primary text-primary-foreground w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               New Note
             </Button>
@@ -261,7 +261,7 @@ export default function Notes() {
           placeholder="Search notes..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
+          className="pl-10 h-10 text-sm sm:text-base"
         />
       </div>
 
@@ -297,16 +297,22 @@ export default function Notes() {
       ) : (
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           {filteredNotes.map((note) => (
-            <Card key={note.id} className="hover:shadow-md transition-shadow">
-              <CardContent className="p-4">
-                <div className="flex items-start justify-between mb-2">
-                  <div className="flex items-center gap-2">
-                    <h3 className="font-medium truncate">{note.title}</h3>
-                    {note.encrypted && <Lock className="w-3 h-3 text-muted-foreground" />}
+            <Card key={note.id} className="hover:shadow-md transition-shadow h-full">
+              <CardContent className="p-4 flex flex-col h-full">
+                {/* Header with title and actions */}
+                <div className="flex items-start justify-between gap-2 mb-3">
+                  <div className="flex items-center gap-2 flex-1 min-w-0">
+                    <h3 className="font-medium text-base leading-tight break-words">{note.title}</h3>
+                    {note.encrypted && (
+                      <Lock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                    )}
+                    {note.pinned && (
+                      <Pin className="w-3.5 h-3.5 text-warning fill-warning flex-shrink-0" />
+                    )}
                   </div>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                      <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0 -mt-1 -mr-1">
                         <MoreVertical className="w-4 h-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -317,7 +323,7 @@ export default function Notes() {
                       </DropdownMenuItem>
                       <DropdownMenuItem>
                         <Pin className="w-4 h-4 mr-2" />
-                        Pin
+                        {note.pinned ? 'Unpin' : 'Pin'}
                       </DropdownMenuItem>
                       <DropdownMenuItem className="text-destructive">
                         <Trash2 className="w-4 h-4 mr-2" />
@@ -326,18 +332,31 @@ export default function Notes() {
                     </DropdownMenuContent>
                   </DropdownMenu>
                 </div>
-                <p className="text-sm text-muted-foreground line-clamp-3 mb-3">
+
+                {/* Content preview */}
+                <p className="text-sm text-muted-foreground line-clamp-4 mb-3 flex-1 break-words whitespace-pre-wrap">
                   {note.content}
                 </p>
-                {note.tags.length > 0 && (
-                  <div className="flex gap-1 flex-wrap">
-                    {note.tags.map((tag) => (
-                      <Badge key={tag} variant="secondary" className="text-xs">
-                        {tag}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
+
+                {/* Tags and metadata */}
+                <div className="space-y-2 pt-2 border-t border-border/50">
+                  {note.tags.length > 0 && (
+                    <div className="flex gap-1 flex-wrap">
+                      {note.tags.map((tag) => (
+                        <Badge key={tag} variant="secondary" className="text-xs">
+                          {tag}
+                        </Badge>
+                      ))}
+                    </div>
+                  )}
+                  <p className="text-xs text-muted-foreground/70">
+                    {new Date(note.createdAt).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    })}
+                  </p>
+                </div>
               </CardContent>
             </Card>
           ))}

@@ -223,12 +223,12 @@ export default function Passwords() {
           <p className="text-muted-foreground">Securely store and manage your credentials</p>
         </div>
         <Card className="border-dashed">
-          <CardContent className="flex flex-col items-center justify-center py-12">
-            <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center mb-4">
+          <CardContent className="flex flex-col items-center justify-center py-8 sm:py-12 px-4">
+            <div className="w-12 h-12 rounded-full bg-warning/10 flex items-center justify-center mb-3 sm:mb-4">
               <Shield className="w-6 h-6 text-warning" />
             </div>
-            <h3 className="font-medium text-foreground mb-1">Encryption Not Unlocked</h3>
-            <p className="text-sm text-muted-foreground text-center mb-4 max-w-sm">
+            <h3 className="font-medium text-foreground mb-1 text-sm sm:text-base">Encryption Not Unlocked</h3>
+            <p className="text-xs sm:text-sm text-muted-foreground text-center mb-4 max-w-sm">
               Please unlock your vault with your password to view and manage your passwords
             </p>
           </CardContent>
@@ -241,17 +241,17 @@ export default function Passwords() {
     <motion.div
       initial={{ opacity: 0, y: 20 }}
       animate={{ opacity: 1, y: 0 }}
-      className="space-y-6"
+      className="space-y-4 sm:space-y-6"
     >
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-4">
         <div>
-          <h1 className="text-2xl font-bold tracking-tight">Passwords</h1>
-          <p className="text-muted-foreground">Securely store and manage your credentials</p>
+          <h1 className="text-xl sm:text-2xl font-bold tracking-tight">Passwords</h1>
+          <p className="text-sm sm:text-base text-muted-foreground mt-0.5">Securely store and manage your credentials</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
           <DialogTrigger asChild>
-            <Button className="gradient-primary text-primary-foreground">
+            <Button className="gradient-primary text-primary-foreground w-full sm:w-auto">
               <Plus className="w-4 h-4 mr-2" />
               Add Password
             </Button>
@@ -488,7 +488,7 @@ export default function Passwords() {
           placeholder="Search passwords..."
           value={searchQuery}
           onChange={(e) => setSearchQuery(e.target.value)}
-          className="pl-10"
+          className="pl-10 h-10 text-sm sm:text-base"
         />
       </div>
 
@@ -531,54 +531,32 @@ export default function Passwords() {
               >
                 <Card className="hover:shadow-md transition-shadow">
                   <CardContent className="p-4">
-                    <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
-                        <KeyRound className="w-5 h-5 text-primary" />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <h3 className="font-medium truncate">{password.title}</h3>
-                          {password.favorite && (
-                            <Star className="w-4 h-4 text-warning fill-warning" />
+                    {/* Mobile-optimized layout */}
+                    <div className="space-y-3">
+                      {/* Header with icon, title, and menu */}
+                      <div className="flex items-start gap-3">
+                        <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center flex-shrink-0">
+                          <KeyRound className="w-5 h-5 text-primary" />
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 mb-1">
+                            <h3 className="font-medium text-base leading-tight">{password.title}</h3>
+                            {password.favorite && (
+                              <Star className="w-4 h-4 text-warning fill-warning flex-shrink-0" />
+                            )}
+                          </div>
+                          <p className="text-sm text-muted-foreground break-all">
+                            {password.username}
+                          </p>
+                          {password.url && (
+                            <p className="text-xs text-muted-foreground/70 break-all mt-1">
+                              {password.url}
+                            </p>
                           )}
                         </div>
-                        <p className="text-sm text-muted-foreground truncate">
-                          {password.username}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-1">
-                        {password.tags.slice(0, 2).map((tag) => (
-                          <Badge key={tag} variant="secondary" className="text-xs">
-                            {tag}
-                          </Badge>
-                        ))}
-                      </div>
-                      <div className="flex items-center gap-1">
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          className="h-8 w-8"
-                          onClick={() => copyToClipboard(password.username, password.id)}
-                        >
-                          {copiedId === password.id ? (
-                            <Check className="w-4 h-4 text-success" />
-                          ) : (
-                            <Copy className="w-4 h-4" />
-                          )}
-                        </Button>
-                        {password.url && (
-                          <Button
-                            variant="ghost"
-                            size="icon"
-                            className="h-8 w-8"
-                            onClick={() => window.open(password.url, '_blank')}
-                          >
-                            <ExternalLink className="w-4 h-4" />
-                          </Button>
-                        )}
                         <DropdownMenu>
                           <DropdownMenuTrigger asChild>
-                            <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 flex-shrink-0">
                               <MoreVertical className="w-4 h-4" />
                             </Button>
                           </DropdownMenuTrigger>
@@ -602,6 +580,51 @@ export default function Passwords() {
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
+                      </div>
+
+                      {/* Tags and Actions row */}
+                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-border/50">
+                        <div className="flex gap-1 flex-wrap flex-1 min-w-0">
+                          {password.tags.length > 0 ? (
+                            password.tags.slice(0, 3).map((tag) => (
+                              <Badge key={tag} variant="secondary" className="text-xs">
+                                {tag}
+                              </Badge>
+                            ))
+                          ) : (
+                            <span className="text-xs text-muted-foreground">No tags</span>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 flex-shrink-0">
+                          <Button
+                            variant="outline"
+                            size="sm"
+                            className="h-8 px-3"
+                            onClick={() => copyToClipboard(password.username, password.id)}
+                          >
+                            {copiedId === password.id ? (
+                              <>
+                                <Check className="w-3 h-3 mr-1" />
+                                <span className="text-xs">Copied</span>
+                              </>
+                            ) : (
+                              <>
+                                <Copy className="w-3 h-3 mr-1" />
+                                <span className="text-xs">Copy</span>
+                              </>
+                            )}
+                          </Button>
+                          {password.url && (
+                            <Button
+                              variant="outline"
+                              size="sm"
+                              className="h-8 w-8 p-0"
+                              onClick={() => window.open(password.url, '_blank')}
+                            >
+                              <ExternalLink className="w-3 h-3" />
+                            </Button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </CardContent>
